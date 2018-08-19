@@ -1,7 +1,7 @@
 import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
-from logging import StreamHandler, BASIC_FORMAT
+from logging import StreamHandler
 
 
 def setup_logging():
@@ -10,7 +10,7 @@ def setup_logging():
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
     stream_handler = StreamHandler()
-    stream_handler.setFormatter(BASIC_FORMAT)
+    stream_handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
     logger_instance = logging.getLogger('autoscaling')
     logger_instance.addHandler(file_handler)
     logger_instance.addHandler(stream_handler)
