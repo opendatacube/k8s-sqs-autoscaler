@@ -19,6 +19,9 @@ if __name__ == '__main__':
     parser.add_option("--kubernetes-namespace",
                       dest="kubernetes_namespace",
                       help="")
+    parser.add_option("--kubernetes-deployment-selector",
+                      dest="kubernetes_deployment_selector",
+                      help="")
     parser.add_option("--aws-region",
                       dest="aws_region",
                       help="")
