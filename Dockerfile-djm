@@ -1,0 +1,17 @@
+FROM python:3.7.0-alpine
+WORKDIR /usr/src/app
+
+RUN apk add curl
+
+# add envkey
+RUN curl -s https://raw.githubusercontent.com/envkey/envkey-source/master/install.sh | /bin/sh
+
+# add dependencies to build cffi python module
+RUN apk add --virtual build-deps gcc python3-dev musl-dev libffi-dev openssl-dev
+
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY . .
+
+CMD eval $(envkey-source) && python ./k8s-sqs-autoscaler
