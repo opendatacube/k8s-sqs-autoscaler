@@ -26,7 +26,7 @@ class SQSPoller:
     def message_counts(self):
         response = self.sqs_client.get_queue_attributes(
             QueueUrl=self.options.sqs_queue_url,
-            AttributeNames=['ApproximateNumberOfMessages']
+            AttributeNames=['ApproximateNumberOfMessages','ApproximateNumberOfMessagesNotVisible']
         )
         message_count = int(response['Attributes']['ApproximateNumberOfMessages'])
         invisible_message_count = int(response['Attributes']['ApproximateNumberOfMessagesNotVisible'])
