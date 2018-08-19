@@ -34,6 +34,7 @@ class SQSPoller:
 
     def poll(self):
         message_count = self.message_count()
+        logger.debug("Current message count: %d" % message_count)
         t = time()
         if  message_count >= self.options.scale_up_messages:
             if t - self.last_scale_up_time > self.options.scale_up_cool_down:
