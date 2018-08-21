@@ -34,9 +34,8 @@ class SQSPoller:
 
     def poll(self):
         message_count, invisible_message_count = self.message_counts()
-        logger.debug("Current message counts: %d visible / %d invisible" % (message_count, invisible_message_count))
         deployment = self.deployment()
-        logger.debug("Current replicas: %d" %  deployment.spec.replicas)
+        logger.debug("Current message counts: %d visible / %d invisible. %d replicas." % (message_count, invisible_message_count, deployment.spec.replicas))
         t = time()
         if  message_count >= self.options.scale_up_messages:
             if t - self.last_scale_up_time > self.options.scale_up_cool_down:
@@ -46,39 +45,40 @@ class SQSPoller:
                 logger.debug("Waiting for scale up cooldown")
         if message_count <= self.options.scale_down_messages:
             # special case - do not scale to zero unless there are no invisible messages
-            if deployment.spec.replicas <= 1 and invisible_message_count > 0:
-                logger.debug("Not scaling to zero because messages are still in-flight")
+            if invisible_message_count > 0 and deployment.spec.replicas <= invisible_message_count:
+                logger.debug("Not scaling down because messages are still in-flight")
             elif t - self.last_scale_down_time > self.options.scale_down_cool_down:
                 self.scale_down(deployment)
                 self.last_scale_down_time = t
             else:
-                logger.debug("Waiting for scale down cooldown")
+                if deployment.spec.replicas > self.options.min_pods:
+                    logger.debug("Waiting for scale down cooldown")
 
         # code for scale to use msg_count
         sleep(self.options.poll_period)
 
     def scale_up(self, deployment):
         if deployment.spec.replicas < self.options.max_pods:
-            logger.info("Scaling up")
             deployment.spec.replicas += 1
+            logger.info("Scaling up to %d" % deployment.spec.replicas)
             self.update_deployment(deployment)
         elif deployment.spec.replicas > self.options.max_pods:
             self.scale_down(deployment)
         else:
-            logger.info("Max pods reached")
+            logger.debug("Max pods reached")
 
     def scale_down(self, deployment):
         if deployment.spec.replicas > self.options.min_pods:
-            logger.info("Scaling Down")
             deployment.spec.replicas -= 1
+            logger.info("Scaling down to %d" % deployment.spec.replicas)
             self.update_deployment(deployment)
         elif deployment.spec.replicas < self.options.min_pods:
             self.scale_up(deployment)
         else:
-            logger.info("Min pods reached")
+            logger.debug("Min pods reached")
 
     def deployment(self):
-        logger.debug("loading deployment: {} from namespace: {}".format(self.options.kubernetes_deployment, self.options.kubernetes_namespace))
+        #logger.debug("loading deployment: {} from namespace: {}".format(self.options.kubernetes_deployment, self.options.kubernetes_namespace))
         if self.options.kubernetes_deployment_selector:
             selector = self.options.kubernetes_deployment_selector
         else:
