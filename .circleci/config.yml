@@ -1,3 +1,5 @@
+# simple Docker build and push
+
 version: 2
 jobs:
   docker_push:
@@ -28,14 +30,14 @@ jobs:
             eval $(./envkey-source)
             echo "${GCR_DOCKER_REGISTRY_PASSWORD}" | docker login -u _json_key --password-stdin https://gcr.io
       - run:
-          name: Build leela-poller image
+          name: Build k8s-sqs-autoscaler image
           command: |
             docker build --rm=false \
             -t gcr.io/djm-kubetest/k8s-sqs-autoscaler:$CIRCLE_SHA1 \
             -t gcr.io/djm-kubetest/k8s-sqs-autoscaler:$CIRCLE_BRANCH \
             -f ./Dockerfile-djm .
       - run:
-          name: Push leela-poller image
+          name: Push k8s-sqs-autoscaler image
           command: |
             docker push gcr.io/djm-kubetest/k8s-sqs-autoscaler:$CIRCLE_BRANCH
 
