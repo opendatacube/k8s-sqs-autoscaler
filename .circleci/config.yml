@@ -1,0 +1,52 @@
+# simple Docker build and push - test
+
+version: 2
+jobs:
+  docker_push:
+    docker:
+      - image: bayesimpact/circleci
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - &install_envkey
+        run:
+          name: Install Envkey
+          command: |
+            VERSION=1.1.7
+            PLATFORM=linux
+            ARCH=amd64
+            URL="https://github.com/envkey/envkey-source/releases/download/v${VERSION}/envkey-source_${VERSION}_${PLATFORM}_${ARCH}.tar.gz"
+
+            if [ ! -x envkey-source ]; then
+                curl -s -L -o envkey-source.tar.gz "${URL}"
+                tar zxf envkey-source.tar.gz envkey-source 2> /dev/null
+                rm -f envkey-source.tar.gz
+            fi
+      - run:
+          name: Authenticate with GCR
+          command: |
+            eval $(./envkey-source)
+            echo "${GCR_DOCKER_REGISTRY_PASSWORD}" | docker login -u _json_key --password-stdin https://gcr.io
+      - run:
+          name: Build k8s-sqs-autoscaler image
+          command: |
+            docker build --rm=false \
+            -t gcr.io/djm-kubetest/k8s-sqs-autoscaler:$CIRCLE_SHA1 \
+            -t gcr.io/djm-kubetest/k8s-sqs-autoscaler:$CIRCLE_BRANCH \
+            -f ./Dockerfile-djm .
+      - run:
+          name: Push k8s-sqs-autoscaler image
+          command: |
+            docker push gcr.io/djm-kubetest/k8s-sqs-autoscaler:$CIRCLE_BRANCH
+
+workflows:
+  version: 2
+  build_all:
+    jobs:
+      - docker_push:
+          filters:
+            branches:
+              only:
+                - djm
