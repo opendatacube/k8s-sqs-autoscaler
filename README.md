@@ -1,10 +1,12 @@
 # k8s-sqs-autoscaler
-Kubernetes pod autoscaler based on queue size in AWS SQS
+Kubernetes pod autoscaler based on queue size in AWS SQS.
+
+This is a fork repo created based on the original work done by Dan Maas: https://github.com/coreplane/k8s-sqs-autoscaler
 
 ## Usage
 Create a kubernetes deployment like this:
 ```
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-k8s-autoscaler
@@ -48,3 +50,21 @@ spec:
         - containerPort: 80
 
 ```
+
+## Options
+* --sqs-queue-url=queue-url-to-watch # --sqs-queue-url or --sqs-queue-name required
+* --sqs-queue-name=sqs-queue-name  # --sqs-queue-url or --sqs-queue-name required
+* --kubernetes-deployment=$(KUBERNETES_DEPLOYMENT) # required - deplyment-name-of-scaling-pod
+* --kubernetes-namespace=$(K8S_NAMESPACE) # required
+* --aws-region=us-west-2 # required
+* --poll-period=10 # optional
+* --scale-down-cool-down=30 # optional
+* --scale-up-cool-down=10 # optional
+* --scale-up-messages=20 # optional
+* --scale-down-messages=20 # optional
+* --max-pods=20 # optional
+* --min-pods=1 # optional
+
+
+## Debugging
+Enable environment variable LOGGING_LEVEL with log level of INFO, ERROR, DEBUG
