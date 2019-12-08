@@ -1,6 +1,6 @@
 ORG=opendatacube
 PROJ=k8s-sqs-autoscaler
-VERSION=1.0.2
+VERSION=1.0.3
 
 .PHONY=release
 release:

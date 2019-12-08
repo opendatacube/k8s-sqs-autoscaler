@@ -1,4 +1,6 @@
 import boto3
+import os
+from role.assume_role import get_role_base_client
 from time import sleep, time
 from logs.log import logger
 from kubernetes import client, config
@@ -12,7 +14,12 @@ class SQSPoller:
 
     def __init__(self, options):
         self.options = options
-        self.sqs_client = boto3.client('sqs')
+
+        if 'AWS_ROLE_ARN' in os.environ and 'AWS_WEB_IDENTITY_TOKEN_FILE' in os.environ:
+            # setup role based federated client
+            self.sqs_client = get_role_base_client('sqs')
+        else:
+            self.sqs_client = boto3.client('sqs')
 
         if not self.options.sqs_queue_url:
             # derive the URL from the queue name
