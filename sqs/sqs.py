@@ -1,9 +1,12 @@
-import boto3
-import os
-from role.assume_role import get_role_base_client
+from boto3 import Session
+from botocore.session import get_session
+from botocore.credentials import RefreshableCredentials
+from helper.assume_role_helper import refresh_credentials
 from time import sleep, time
 from logs.log import logger
 from kubernetes import client, config
+import os
+import boto3
 
 class SQSPoller:
 
@@ -14,10 +17,23 @@ class SQSPoller:
 
     def __init__(self, options):
         self.options = options
-
         if 'AWS_ROLE_ARN' in os.environ and 'AWS_WEB_IDENTITY_TOKEN_FILE' in os.environ:
-            # setup role based federated client
-            self.sqs_client = get_role_base_client('sqs')
+            # setup role/session based client
+            role_with_web_identity_params = {
+                "DurationSeconds": os.getenv('SESSION_DURATION', 3600),
+                "RoleArn": os.getenv('AWS_ROLE_ARN'),
+                "RoleSessionName": os.getenv('AWS_SESSION_NAME', 'test_session'),
+                "WebIdentityToken": open(os.getenv('AWS_WEB_IDENTITY_TOKEN_FILE')).read(),
+            }
+            session = get_session()
+            session._credentials = RefreshableCredentials.create_from_metadata(
+                metadata=refresh_credentials(**role_with_web_identity_params),
+                refresh_using=refresh_credentials,
+                method="sts-assume-role-with-web-identity",
+            )
+            autorefresh_session = Session(botocore_session=session)
+
+            self.sqs_client = autorefresh_session.client('sqs')
         else:
             self.sqs_client = boto3.client('sqs')
 
