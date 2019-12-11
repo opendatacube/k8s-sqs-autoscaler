@@ -6,10 +6,10 @@ def role_arn_to_session(**args):
     """ Create boto3 session using federated access
         Usage :
             params = {
-                "RoleArn": 'arn:aws:iam::012345678901:role/example-role',
-                "RoleSessionName": 'ExampleSessionName',
-                "WebIdentityToken": 'ExampleToken',
-                "DurationSeconds": 3600,
+                "DurationSeconds": os.getenv('SESSION_DURATION', 3600),
+                "RoleArn": os.getenv('AWS_ROLE_ARN'),
+                "RoleSessionName": os.getenv('AWS_SESSION_NAME', 'test_session'),
+                "WebIdentityToken": open(os.getenv('AWS_WEB_IDENTITY_TOKEN_FILE')).read(),
             }
             session = role_arn_to_session(**params)
             client = session.client('sqs')
