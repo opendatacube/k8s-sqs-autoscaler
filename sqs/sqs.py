@@ -1,7 +1,9 @@
-import boto3
+from helper.assume_role_helper import get_autorefresh_session
 from time import sleep, time
 from logs.log import logger
 from kubernetes import client, config
+import boto3
+import os
 
 class SQSPoller:
 
@@ -12,7 +14,18 @@ class SQSPoller:
 
     def __init__(self, options):
         self.options = options
-        self.sqs_client = boto3.client('sqs')
+        if 'AWS_ROLE_ARN' in os.environ and 'AWS_WEB_IDENTITY_TOKEN_FILE' in os.environ:
+            # setup role/session based client
+            role_with_web_identity_params = {
+                "DurationSeconds": os.getenv('SESSION_DURATION', 3600),
+                "RoleArn": os.getenv('AWS_ROLE_ARN'),
+                "RoleSessionName": os.getenv('AWS_SESSION_NAME', 'test_session'),
+                "WebIdentityToken": open(os.getenv('AWS_WEB_IDENTITY_TOKEN_FILE')).read(),
+            }
+            autorefresh_session = get_autorefresh_session(**role_with_web_identity_params)
+            self.sqs_client = autorefresh_session.client('sqs')
+        else:
+            self.sqs_client = boto3.client('sqs')
 
         if not self.options.sqs_queue_url:
             # derive the URL from the queue name
