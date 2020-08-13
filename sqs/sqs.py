@@ -9,7 +9,7 @@ class SQSPoller:
 
     options = None
     sqs_client = None
-    extensions_v1_beta1 = None
+    apps_v1 = None
     last_message_count = None
 
     def __init__(self, options):
@@ -32,7 +32,7 @@ class SQSPoller:
             self.options.sqs_queue_url = self.sqs_client.get_queue_url(QueueName = self.options.sqs_queue_name)['QueueUrl']
 
         config.load_incluster_config()
-        self.extensions_v1_beta1 = client.ExtensionsV1beta1Api()
+        self.apps_v1 = client.AppsV1Api()
         self.last_scale_up_time = time()
         self.last_scale_down_time = time()
 
@@ -96,12 +96,12 @@ class SQSPoller:
             selector = self.options.kubernetes_deployment_selector
         else:
             selector = "app={}".format(self.options.kubernetes_deployment)
-        deployments = self.extensions_v1_beta1.list_namespaced_deployment(self.options.kubernetes_namespace, label_selector=selector)
+        deployments = self.apps_v1.list_namespaced_deployment(self.options.kubernetes_namespace, label_selector=selector)
         return deployments.items[0]
 
     def update_deployment(self, deployment):
         # Update the deployment
-        api_response = self.extensions_v1_beta1.patch_namespaced_deployment(
+        api_response = self.apps_v1.patch_namespaced_deployment(
             name=self.options.kubernetes_deployment,
             namespace=self.options.kubernetes_namespace,
             body=deployment)

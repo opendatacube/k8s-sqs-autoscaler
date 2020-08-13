@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: my-k8s-autoscaler
-        image: opendatacube/k8s-sqs-autoscaler:1.0.2
+        image: opendatacube/k8s-sqs-autoscaler:1.0.6
         command:
           - ./k8s-sqs-autoscaler
           - --sqs-queue-url=https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ID)/$(SQS_QUEUE) # required
@@ -54,16 +54,16 @@ spec:
 ## Options
 * --sqs-queue-url=queue-url-to-watch # --sqs-queue-url or --sqs-queue-name required
 * --sqs-queue-name=sqs-queue-name  # --sqs-queue-url or --sqs-queue-name required
-* --kubernetes-deployment=$(KUBERNETES_DEPLOYMENT) # required - deplyment-name-of-scaling-pod
-* --kubernetes-namespace=$(K8S_NAMESPACE) # required
-* --aws-region=us-west-2 # required
-* --poll-period=10 # optional
-* --scale-down-cool-down=30 # optional
-* --scale-up-cool-down=10 # optional
-* --scale-up-messages=20 # optional
-* --scale-down-messages=20 # optional
-* --max-pods=20 # optional
-* --min-pods=1 # optional
+* --kubernetes-deployment=$(KUBERNETES_DEPLOYMENT) # required - deployment-name-of-scaling-pod
+* --kubernetes-namespace=$(K8S_NAMESPACE) # required - kubernetes namespace to deploy to
+* --aws-region=us-west-2 # required - SQS queue aws region 
+* --poll-period=10 # optional - SQS poll-period in seconds
+* --scale-down-cool-down=30 # optional - scale-down wait time in seconds
+* --scale-up-cool-down=10 # optional - scale-up wait time in seconds
+* --scale-up-messages=20 # optional - average messages (ApproximateNumberOfMessages) > --scale-up-messages
+* --scale-down-messages=20 # optional - average messages (ApproximateNumberOfMessages) < --scale-down-messages
+* --max-pods=10 # optional - Maximum pod count
+* --min-pods=1 # optional - Minimum pod count
 
 
 ## Debugging
